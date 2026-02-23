@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لأجمل شخص ❤️</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  overflow: hidden;
+  text-align: center;
+  color: white;
+  height: 100vh;
+}
+
+.screen {
+  display: none;
+  position: absolute;
+  width: 100%;
+  top: 30%;
+  transition: 0.6s ease;
+}
+
+.active {
+  display: block;
+  animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+h1, h2 {
+  text-shadow: 0 0 15px rgba(255,255,255,0.8);
+}
+
+button {
+  padding: 12px 25px;
+  margin: 15px;
+  font-size: 18px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.yes {
+  background: white;
+  color: #ff4d6d;
+  box-shadow: 0 0 15px white;
+}
+
+.yes:hover {
+  transform: scale(1.1);
+}
+
+.no {
+  background: rgba(255,255,255,0.6);
+  color: black;
+  position: relative;
+}
+
+#hearts span {
+  position: fixed;
+  bottom: -20px;
+  animation: float 6s linear infinite;
+}
+
+@keyframes float {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-100vh); opacity: 0; }
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="q1" class="screen active">
+  <h1>لدي شيء صغير لكِ ❤️</h1>
+  <button class="yes" onclick="next('q2')">ابدئي</button>
+</div>
+
+<div id="q2" class="screen">
+  <h2>هل تثقين بي؟ 😌</h2>
+  <button class="yes" onclick="next('q3')">نعم</button>
+  <button class="no" onmouseover="move(this)">لا</button>
+</div>
+
+<div id="q3" class="screen">
+  <h2>هل تحبين المفاجآت؟ 🎁</h2>
+  <button class="yes" onclick="next('q4')">أكيد</button>
+  <button class="no" onmouseover="move(this)">لا</button>
+</div>
+
+<div id="q4" class="screen">
+  <h2>Raki haba ta3arfi wach habit n9olek ? ❤️</h2>
+  <button class="yes" onclick="showLove()">نعم ❤️</button>
+  <button class="no" onmouseover="move(this)">لا</button>
+</div>
+
+<div id="final" class="screen">
+  <h1 id="loveText"></h1>
+</div>
+
+<div id="hearts"></div>
+
+<script>
+
+// ✨ ضع اسمها هنا
+const herName = "anfeel";
+
+function next(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function move(btn) {
+  btn.style.position = "fixed";
+  btn.style.top = Math.random() * window.innerHeight * 0.6 + "px";
+  btn.style.left = Math.random() * window.innerWidth * 0.6 + "px";
+}
+
+function showLove() {
+  next('final');
+  document.getElementById("loveText").innerHTML = "Tiri te9ray " + herName + " ❤️";
+  createHearts();
+}
+
+function createHearts() {
+  const hearts = document.getElementById("hearts");
+  setInterval(() => {
+    const heart = document.createElement("span");
+    heart.innerHTML = "❤️";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (Math.random() * 20 + 20) + "px";
+    hearts.appendChild(heart);
+    setTimeout(() => heart.remove(), 6000);
+  }, 300);
+}
+
+</script>
+
+</body>
+</html>
