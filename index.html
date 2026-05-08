@@ -1,470 +1,226 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
 <title>CLASSIFIED // PRIVATE ACCESS</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
 <style>
-  :root {
-    --green: #00ff41;
-    --green-dim: #00cc33;
-    --green-dark: #003300;
-    --green-glow: rgba(0,255,65,0.4);
-    --red: #ff0040;
-    --red-glow: rgba(255,0,64,0.5);
-    --gold: #ffd700;
-    --bg: #000000;
-    --glass: rgba(0,255,65,0.05);
-    --glass-border: rgba(0,255,65,0.15);
-  }
 
-- { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
-html, body {
-width:100%; height:100%; overflow:hidden;
-background:#000; color:var(–green);
-font-family:‘Share Tech Mono’, monospace;
-cursor:none;
+:root{
+  --green:#00ff41;
+  --green-dim:#00cc33;
+  --green-glow:rgba(0,255,65,0.4);
+  --red:#ff0040;
+  --bg:#000;
 }
 
-/* ─── MATRIX CANVAS ─── */
-#matrix-canvas {
-position:fixed; top:0; left:0; z-index:0;
-opacity:0.18;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-/* ─── STARS CANVAS ─── */
-#stars-canvas {
-position:fixed; top:0; left:0; z-index:0;
-opacity:0; transition:opacity 2s ease;
-pointer-events:none;
-}
-#stars-canvas.active { opacity:1; }
-
-/* ─── SCANLINES ─── */
-.scanlines {
-position:fixed; top:0; left:0; width:100%; height:100%;
-z-index:1; pointer-events:none;
-background:repeating-linear-gradient(
-to bottom,
-transparent 0px,
-transparent 3px,
-rgba(0,0,0,0.12) 3px,
-rgba(0,0,0,0.12) 4px
-);
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  color:var(--green);
+  font-family:'Share Tech Mono', monospace;
 }
 
-/* ─── FLICKER ─── */
-.flicker-overlay {
-position:fixed; top:0; left:0; width:100%; height:100%;
-z-index:2; pointer-events:none;
-animation: screenFlicker 8s infinite;
-}
-@keyframes screenFlicker {
-0%,97%,100% { opacity:0; }
-97.5% { opacity:0.04; }
-98% { opacity:0; }
-98.5% { opacity:0.06; }
-99% { opacity:0; }
+#matrix-canvas{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  opacity:0.18;
+  z-index:0;
 }
 
-/* ─── MAIN WRAPPER ─── */
-#app {
-position:fixed; top:0; left:0; width:100%; height:100%;
-z-index:10; display:flex; align-items:center; justify-content:center;
-padding:20px;
+.scanlines{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0,0,0,0.12) 3px,
+    rgba(0,0,0,0.12) 4px
+  );
 }
 
-/* ─── STAGE ─── */
-.stage {
-display:none; width:100%; max-width:420px;
-animation: stageIn 0.6s ease forwards;
-}
-.stage.active { display:flex; flex-direction:column; align-items:center; }
-@keyframes stageIn {
-from { opacity:0; transform:translateY(20px) scale(0.98); filter:blur(4px); }
-to   { opacity:1; transform:translateY(0)   scale(1);    filter:blur(0); }
-}
-
-/* ─── TERMINAL BOX ─── */
-.terminal-box {
-width:100%;
-background:var(–glass);
-border:1px solid var(–glass-border);
-border-radius:4px;
-padding:20px 18px;
-backdrop-filter:blur(8px);
-box-shadow: 0 0 30px rgba(0,255,65,0.08), inset 0 0 20px rgba(0,0,0,0.5);
-position:relative; overflow:hidden;
-}
-.terminal-box::before {
-content:’’;
-position:absolute; top:0; left:0; right:0; height:1px;
-background:linear-gradient(90deg, transparent, var(–green), transparent);
-animation: scanLine 3s linear infinite;
-}
-@keyframes scanLine {
-0% { transform:translateY(0); opacity:0.5; }
-100% { transform:translateY(300px); opacity:0; }
+#app{
+  position:relative;
+  z-index:5;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
 }
 
-/* ─── TERMINAL HEADER ─── */
-.term-header {
-display:flex; align-items:center; gap:8px;
-margin-bottom:16px; padding-bottom:10px;
-border-bottom:1px solid rgba(0,255,65,0.1);
-}
-.term-dot { width:8px; height:8px; border-radius:50%; }
-.term-dot.r { background:#ff5f57; box-shadow:0 0 6px #ff5f57; }
-.term-dot.y { background:#febc2e; box-shadow:0 0 6px #febc2e; }
-.term-dot.g { background:#28c840; box-shadow:0 0 6px #28c840; }
-.term-title {
-font-family:‘Share Tech Mono’, monospace;
-font-size:10px; color:rgba(0,255,65,0.5);
-margin-left:4px; letter-spacing:2px;
+.stage{
+  display:none;
+  width:100%;
+  max-width:420px;
 }
 
-/* ─── TYPOGRAPHY ─── */
-.system-label {
-font-size:9px; letter-spacing:3px; color:rgba(0,255,65,0.5);
-text-transform:uppercase; margin-bottom:6px;
-}
-.main-title {
-font-family:‘VT323’, monospace;
-font-size:28px; color:var(–green);
-text-shadow: 0 0 20px var(–green-glow), 0 0 40px rgba(0,255,65,0.2);
-letter-spacing:2px; line-height:1.2;
-}
-.warning-title {
-font-family:‘VT323’, monospace;
-font-size:24px; color:var(–red);
-text-shadow: 0 0 20px var(–red-glow);
-letter-spacing:2px; animation: warningPulse 1.5s ease infinite;
-}
-@keyframes warningPulse {
-0%,100% { opacity:1; } 50% { opacity:0.6; }
-}
-.typing-text {
-font-size:13px; line-height:1.8; color:var(–green-dim);
-min-height:20px;
-}
-.cursor-blink::after {
-content:‘█’; animation: blink 1s step-end infinite;
-color:var(–green); font-size:12px;
-}
-@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
-
-/* ─── AMBIENT MESSAGES ─── */
-.ambient-stream {
-font-size:10px; color:rgba(0,255,65,0.3);
-line-height:1.9; margin:10px 0; font-family:‘Share Tech Mono’,monospace;
-min-height:60px;
+.stage.active{
+  display:block;
 }
 
-/* ─── PROGRESS BAR ─── */
-.progress-wrap {
-width:100%; background:rgba(0,255,65,0.08);
-border:1px solid rgba(0,255,65,0.2); border-radius:2px;
-height:4px; margin:12px 0; overflow:hidden;
-}
-.progress-bar {
-height:100%; background:var(–green);
-box-shadow:0 0 10px var(–green);
-width:0%; transition:width 0.3s ease;
+.terminal-box{
+  background:rgba(0,255,65,0.05);
+  border:1px solid rgba(0,255,65,0.2);
+  padding:20px;
+  border-radius:4px;
+  backdrop-filter:blur(6px);
+  box-shadow:0 0 30px rgba(0,255,65,0.08);
 }
 
-/* ─── GLITCH TEXT ─── */
-.glitch {
-position:relative; display:inline-block;
-}
-.glitch::before, .glitch::after {
-content:attr(data-text);
-position:absolute; top:0; left:0; width:100%;
-font-family:inherit; font-size:inherit;
-}
-.glitch::before {
-color:var(–red); animation:glitchTop 2s infinite;
-clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
-}
-.glitch::after {
-color:#00ffff; animation:glitchBot 2s infinite;
-clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
-}
-@keyframes glitchTop {
-0%,90%,100%{transform:translate(0);opacity:0;}
-92%{transform:translate(-3px,0);opacity:0.8;}
-94%{transform:translate(3px,0);opacity:0.8;}
-96%{transform:translate(-2px,0);opacity:0;}
-}
-@keyframes glitchBot {
-0%,90%,100%{transform:translate(0);opacity:0;}
-93%{transform:translate(3px,0);opacity:0.8;}
-95%{transform:translate(-3px,0);opacity:0.8;}
-97%{transform:translate(1px,0);opacity:0;}
+.term-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:16px;
 }
 
-/* ─── ACCESS DENIED / GRANTED ─── */
-.access-denied {
-font-family:‘VT323’,monospace; font-size:32px;
-color:var(–red); text-shadow:0 0 20px var(–red-glow);
-text-align:center; animation:denyFlash 0.15s steps(1) 6 forwards;
-}
-@keyframes denyFlash {
-0%,100%{opacity:1;} 50%{opacity:0;}
-}
-.access-granted {
-font-family:‘VT323’,monospace; font-size:30px;
-color:var(–green); text-shadow:0 0 20px var(–green-glow);
-text-align:center; letter-spacing:4px;
+.term-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
 }
 
-/* ─── INPUT FIELD ─── */
-.hack-input {
-width:100%; background:transparent;
-border:none; border-bottom:1px solid var(–green-dim);
-color:var(–green); font-family:‘Share Tech Mono’,monospace;
-font-size:16px; padding:10px 4px; outline:none;
-letter-spacing:2px; caret-color:var(–green);
-}
-.hack-input::placeholder { color:rgba(0,255,65,0.25); }
-.input-wrap {
-width:100%; margin:14px 0; position:relative;
-}
-.input-wrap::after {
-content:attr(data-label);
-position:absolute; top:0; right:0;
-font-size:9px; color:rgba(0,255,65,0.35); letter-spacing:2px;
+.term-dot.r{ background:#ff5f57; }
+.term-dot.y{ background:#febc2e; }
+.term-dot.g{ background:#28c840; }
+
+.term-title{
+  font-size:11px;
+  opacity:0.6;
+  letter-spacing:2px;
 }
 
-/* ─── BUTTON ─── */
-.hack-btn {
-width:100%; padding:14px;
-background:transparent;
-border:1px solid var(–green);
-color:var(–green); font-family:‘VT323’,monospace;
-font-size:22px; letter-spacing:4px;
-cursor:pointer; margin-top:16px;
-position:relative; overflow:hidden;
-transition:all 0.3s ease;
-box-shadow:0 0 15px rgba(0,255,65,0.1);
-}
-.hack-btn::before {
-content:’’;
-position:absolute; top:0; left:-100%; width:100%; height:100%;
-background:linear-gradient(90deg, transparent, rgba(0,255,65,0.1), transparent);
-transition:left 0.5s ease;
-}
-.hack-btn:active::before { left:100%; }
-.hack-btn:active {
-background:rgba(0,255,65,0.1);
-box-shadow:0 0 30px rgba(0,255,65,0.4);
-transform:scale(0.98);
+.warning-title{
+  font-family:'VT323', monospace;
+  font-size:28px;
+  color:var(--red);
+  text-align:center;
+  margin-bottom:20px;
+  text-shadow:0 0 20px rgba(255,0,64,0.5);
 }
 
-/* ─── COORDINATES BOX ─── */
-.coords-box {
-width:100%; padding:16px;
-background:rgba(0,255,65,0.04);
-border:1px solid rgba(0,255,65,0.2);
-border-left:3px solid var(–green);
-margin:12px 0;
-font-family:‘VT323’,monospace; font-size:26px;
-text-align:center; letter-spacing:3px;
-text-shadow:0 0 15px var(–green-glow);
-animation: coordPulse 3s ease infinite;
-}
-@keyframes coordPulse {
-0%,100%{box-shadow:0 0 10px rgba(0,255,65,0.1);}
-50%{box-shadow:0 0 25px rgba(0,255,65,0.25);}
+.typing-text{
+  font-size:13px;
+  line-height:1.8;
+  color:var(--green-dim);
+  margin-bottom:20px;
 }
 
-/* ─── CODE DISPLAY ─── */
-.code-display {
-width:100%; text-align:center; padding:20px 10px;
-font-family:‘VT323’,monospace; font-size:30px;
-color:var(–green); letter-spacing:6px;
-text-shadow:0 0 20px var(–green-glow);
-background:rgba(0,255,65,0.03);
-border:1px solid rgba(0,255,65,0.15);
-border-radius:2px; margin:14px 0;
-word-break:break-all; line-height:1.7;
+.hack-btn{
+  width:100%;
+  padding:14px;
+  background:transparent;
+  border:1px solid var(--green);
+  color:var(--green);
+  font-family:'VT323', monospace;
+  font-size:22px;
+  letter-spacing:3px;
+  cursor:pointer;
+  transition:0.3s;
 }
 
-/* ─── DIVIDER ─── */
-.term-divider {
-width:100%; height:1px; margin:14px 0;
-background:linear-gradient(90deg, transparent, rgba(0,255,65,0.3), transparent);
+.hack-btn:hover{
+  background:rgba(0,255,65,0.1);
+  box-shadow:0 0 20px rgba(0,255,65,0.3);
 }
 
-/* ─── ERROR LINE ─── */
-.error-line {
-font-size:11px; color:var(–red);
-letter-spacing:1px; margin-top:8px;
-animation:errorFade 0.3s ease;
-display:none;
-}
-@keyframes errorFade { from{opacity:0;transform:translateX(-5px);} to{opacity:1;transform:translateX(0);} }
-
-/* ─── TRANSITION SCREEN ─── */
-#transition-screen {
-position:fixed; top:0; left:0; width:100%; height:100%;
-z-index:100; background:#000;
-display:flex; flex-direction:column; align-items:center; justify-content:center;
-opacity:0; pointer-events:none;
-transition:opacity 0.5s ease;
-font-family:‘VT323’,monospace; padding:30px;
-}
-#transition-screen.active { opacity:1; pointer-events:all; }
-
-.big-status {
-font-size:48px; letter-spacing:4px;
-text-align:center; margin-bottom:20px;
-}
-.big-status.green { color:var(–green); text-shadow:0 0 30px var(–green-glow); }
-.big-status.red   { color:var(–red);   text-shadow:0 0 30px var(–red-glow); }
-
-/* ─── FINAL STAGE ─── */
-#stage-final .terminal-box {
-background:rgba(0,0,0,0.5);
-border-color:rgba(255,215,0,0.2);
-box-shadow:0 0 60px rgba(255,215,0,0.05);
-}
-.final-text {
-font-family:‘Cormorant Garamond’, serif;
-font-style:italic; font-weight:300;
-font-size:17px; line-height:2;
-color:rgba(255,255,255,0.82);
-text-align:center;
-opacity:0; animation:finalFadeIn 2s ease 0.5s forwards;
-}
-@keyframes finalFadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
-
-.signature {
-font-family:‘Cormorant Garamond’, serif;
-font-size:22px; font-style:italic;
-color:var(–gold);
-text-shadow:0 0 20px rgba(255,215,0,0.5);
-margin-top:24px; text-align:center;
-opacity:0; animation:finalFadeIn 2s ease 1s forwards;
+.coords-box{
+  width:100%;
+  padding:16px;
+  text-align:center;
+  border:1px solid rgba(0,255,65,0.2);
+  margin:16px 0;
+  font-family:'VT323', monospace;
+  font-size:28px;
 }
 
-.heart-pulse {
-display:inline-block;
-animation: heartBeat 1.2s ease infinite;
-color:#ff3d6b;
-}
-@keyframes heartBeat {
-0%,100%{transform:scale(1);}
-14%{transform:scale(1.3);}
-28%{transform:scale(1);}
-42%{transform:scale(1.2);}
-56%{transform:scale(1);}
+.map-hint{
+  font-size:12px;
+  line-height:1.7;
+  opacity:0.7;
+  margin-bottom:18px;
 }
 
-/* ─── PARTICLES ─── */
-.particle {
-position:fixed; pointer-events:none; z-index:5;
-border-radius:50%;
-animation:particleFly var(–dur) ease forwards;
-}
-@keyframes particleFly {
-0% { transform:translate(0,0) scale(1); opacity:0.8; }
-100% { transform:translate(var(–dx),var(–dy)) scale(0); opacity:0; }
-}
-
-/* ─── DECODE ANIMATION ─── */
-.decode-char {
-display:inline-block;
-animation:decodeChar 0.1s steps(1) var(–delay) both;
-}
-@keyframes decodeChar {
-0%,80%{ content:attr(data-rand); color:rgba(0,255,65,0.3); }
-100%{ color:var(–green); }
+.hack-input{
+  width:100%;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--green);
+  color:var(--green);
+  padding:12px 4px;
+  margin-bottom:14px;
+  outline:none;
+  font-family:'Share Tech Mono', monospace;
 }
 
-/* ─── STAGE TRANSITION WIPE ─── */
-.stage-wipe {
-position:fixed; top:0; left:0; width:100%; height:100%;
-background:var(–green); z-index:200;
-transform:scaleX(0); transform-origin:left;
-pointer-events:none;
+.error-line{
+  color:var(--red);
+  font-size:11px;
+  margin-bottom:12px;
+  display:none;
 }
 
-/* ─── BINARY DISPLAY ─── */
-.binary-display {
-font-size:13px; color:rgba(0,255,65,0.6);
-letter-spacing:2px; line-height:2.2;
-word-break:break-all; text-align:center;
-padding:16px 10px;
-background:rgba(0,255,65,0.03);
-border:1px solid rgba(0,255,65,0.1);
-margin:14px 0;
-font-family:‘Share Tech Mono’,monospace;
+.code-display,
+.binary-display{
+  text-align:center;
+  padding:16px;
+  border:1px solid rgba(0,255,65,0.15);
+  margin:16px 0;
+  line-height:2;
 }
 
-/* ─── MAP HINT ─── */
-.map-hint {
-font-size:11px; color:rgba(0,255,65,0.4);
-line-height:1.8; text-align:center;
-padding:12px; margin-top:8px;
-border:1px dashed rgba(0,255,65,0.15);
-letter-spacing:1px;
+.final-text{
+  font-size:18px;
+  line-height:2;
+  text-align:center;
+  color:white;
 }
 
-/* ─── LEVEL BADGE ─── */
-.level-badge {
-font-size:9px; letter-spacing:3px;
-color:rgba(0,255,65,0.35); text-align:right;
-margin-bottom:12px; text-transform:uppercase;
+.signature{
+  text-align:center;
+  margin-top:20px;
+  font-size:22px;
+  color:#ffd700;
 }
 
-/* ─── STATIC NOISE ─── */
-@keyframes staticNoise {
-0%{background-position:0 0;}
-100%{background-position:100px 100px;}
-}
-
-/* scrollbar hidden */
-::-webkit-scrollbar { display:none; }
-
-/* ─── HINT TEXT ─── */
-.hint-text {
-font-size:10px; color:rgba(0,255,65,0.35);
-letter-spacing:1px; text-align:center;
-margin-top:6px; font-style:italic;
-}
 </style>
-
 </head>
+
 <body>
 
 <canvas id="matrix-canvas"></canvas>
-<canvas id="stars-canvas"></canvas>
 
 <div class="scanlines"></div>
-<div class="flicker-overlay"></div>
-<div class="stage-wipe" id="wipe"></div>
-
-<!-- TRANSITION SCREEN -->
-
-<div id="transition-screen">
-  <div class="big-status" id="ts-status">ACCESS GRANTED</div>
-  <div style="font-family:'Share Tech Mono';font-size:12px;color:rgba(0,255,65,0.5);letter-spacing:2px;text-align:center;" id="ts-sub"></div>
-  <div class="progress-wrap" style="width:80%;max-width:300px;margin-top:24px;">
-    <div class="progress-bar" id="ts-bar"></div>
-  </div>
-</div>
 
 <div id="app">
 
-  <!-- ══════════════════════════════════
-       STAGE 0 — BOOT / INTRO
-  ══════════════════════════════════ -->
+  <!-- STAGE 0 -->
 
   <div class="stage active" id="stage-0">
+
     <div class="terminal-box">
+
       <div class="term-header">
         <div class="term-dot r"></div>
         <div class="term-dot y"></div>
@@ -472,596 +228,244 @@ margin-top:6px; font-style:italic;
         <span class="term-title">SYS::PRIVATE_CHANNEL</span>
       </div>
 
-```
-  <div class="warning-title glitch" data-text="⚠ PRIVATE FILE DETECTED ⚠" id="warning-title">⚠ PRIVATE FILE DETECTED ⚠</div>
+      <div class="warning-title">
+        ⚠ PRIVATE FILE DETECTED ⚠
+      </div>
 
-  <div class="term-divider"></div>
+      <div class="typing-text" id="intro-text">
+        A hidden message has been locked somewhere in the world.<br><br>
+        Only one person can unlock it.
+      </div>
 
-  <div class="ambient-stream" id="ambient-0"></div>
+      <button class="hack-btn" onclick="gotoStage1()">
+        [ INITIALIZE MISSION ]
+      </button>
 
-  <div class="typing-text cursor-blink" id="intro-text"></div>
-
-  <div class="term-divider" id="btn-divider" style="display:none;"></div>
-  <button class="hack-btn" id="start-btn" style="display:none;" onclick="gotoStage1()">
-    [ INITIALIZE MISSION ]
-  </button>
-</div>
-```
-
+    </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       STAGE 1 — COORDINATES
-  ══════════════════════════════════ -->
+  <!-- STAGE 1 -->
 
   <div class="stage" id="stage-1">
+
     <div class="terminal-box">
+
       <div class="term-header">
         <div class="term-dot r"></div>
         <div class="term-dot y"></div>
         <div class="term-dot g"></div>
         <span class="term-title">MISSION_BRIEF.dat</span>
       </div>
-      <div class="level-badge">LEVEL 01 / COORDINATES</div>
 
-```
-  <div class="system-label">» CLASSIFIED LOCATION</div>
-  <div class="coords-box">48.854179, 2.332503</div>
+      <div class="coords-box">
+        48.854179, 2.332503
+      </div>
 
-  <div class="map-hint">
-    Open Google Maps &amp; enter these coordinates.<br>
-    Find the place hidden there.<br><br>
-    <span style="color:var(--green);opacity:0.7;">Its name is the first key.</span>
+      <div class="map-hint">
+        Open Google Maps and find the hidden place.<br>
+        Its name is the key.
+      </div>
+
+      <input class="hack-input" id="input1" placeholder="enter the place name...">
+
+      <div class="error-line" id="error1">
+        WRONG KEY
+      </div>
+
+      <button class="hack-btn" onclick="checkStage1()">
+        [ SUBMIT ]
+      </button>
+
+    </div>
   </div>
 
-  <div class="term-divider"></div>
-
-  <div class="ambient-stream" id="ambient-1" style="min-height:40px;"></div>
-
-  <div class="input-wrap" data-label="INPUT KEY">
-    <input class="hack-input" id="input-1" type="text" placeholder="enter the place name..." autocomplete="off" autocorrect="off" spellcheck="false">
-  </div>
-  <div class="error-line" id="error-1">» ACCESS DENIED — WRONG KEY. TRY AGAIN.</div>
-  <div class="hint-text" id="hint-1"></div>
-  <button class="hack-btn" onclick="checkStage1()">[ SUBMIT KEY ]</button>
-</div>
-```
-
-  </div>
-
-  <!-- ══════════════════════════════════
-       STAGE 2 — ASCII PUZZLE
-  ══════════════════════════════════ -->
+  <!-- STAGE 2 -->
 
   <div class="stage" id="stage-2">
+
     <div class="terminal-box">
+
       <div class="term-header">
         <div class="term-dot r"></div>
         <div class="term-dot y"></div>
         <div class="term-dot g"></div>
-        <span class="term-title">DECRYPT_MODULE_A</span>
+        <span class="term-title">ASCII_DECRYPTION</span>
       </div>
-      <div class="level-badge">LEVEL 02 / ASCII CIPHER</div>
 
-```
-  <div class="system-label">» ENCODED SEQUENCE INTERCEPTED</div>
-  <div class="code-display" id="ascii-display">
-    70 &nbsp; 76 &nbsp; 79 &nbsp; 82 &nbsp; 69
+      <div class="code-display">
+        70 76 79 82 69
+      </div>
+
+      <input class="hack-input" id="input2" placeholder="decrypt the code...">
+
+      <div class="error-line" id="error2">
+        INVALID DECRYPTION
+      </div>
+
+      <button class="hack-btn" onclick="checkStage2()">
+        [ DECRYPT ]
+      </button>
+
+    </div>
   </div>
 
-  <div class="typing-text" id="ascii-hint" style="font-size:11px;color:rgba(0,255,65,0.4);margin-bottom:10px;"></div>
-
-  <div class="term-divider"></div>
-
-  <div class="ambient-stream" id="ambient-2" style="min-height:30px;"></div>
-
-  <div class="input-wrap" data-label="DECRYPTED VALUE">
-    <input class="hack-input" id="input-2" type="text" placeholder="decrypt the code..." autocomplete="off" autocorrect="off" spellcheck="false" style="text-transform:uppercase;">
-  </div>
-  <div class="error-line" id="error-2">» DECRYPTION FAILED — INVALID OUTPUT.</div>
-  <button class="hack-btn" onclick="checkStage2()">[ DECRYPT ]</button>
-</div>
-```
-
-  </div>
-
-  <!-- ══════════════════════════════════
-       STAGE 3 — BINARY PUZZLE
-  ══════════════════════════════════ -->
+  <!-- STAGE 3 -->
 
   <div class="stage" id="stage-3">
+
     <div class="terminal-box">
+
       <div class="term-header">
         <div class="term-dot r"></div>
         <div class="term-dot y"></div>
         <div class="term-dot g"></div>
-        <span class="term-title">DECRYPT_MODULE_B</span>
+        <span class="term-title">BINARY_DECRYPTION</span>
       </div>
-      <div class="level-badge">LEVEL 03 / BINARY CIPHER</div>
 
-```
-  <div class="system-label">» FINAL ENCRYPTED TRANSMISSION</div>
-  <div class="binary-display">
-    01001001 00100000 01100110 01101111<br>
-    01110101 01101110 01100100 00100000<br>
-    01111001 01101111 01110101
+      <div class="binary-display">
+        01001001 00100000 01100110 01101111<br>
+        01110101 01101110 01100100 00100000<br>
+        01111001 01101111 01110101
+      </div>
+
+      <input class="hack-input" id="input3" placeholder="decode the message...">
+
+      <div class="error-line" id="error3">
+        WRONG MESSAGE
+      </div>
+
+      <button class="hack-btn" onclick="checkStage3()">
+        [ SUBMIT ]
+      </button>
+
+    </div>
   </div>
 
-  <div class="typing-text" id="binary-hint" style="font-size:11px;color:rgba(0,255,65,0.4);margin-bottom:10px;"></div>
-
-  <div class="term-divider"></div>
-  <div class="ambient-stream" id="ambient-3" style="min-height:30px;"></div>
-
-  <div class="input-wrap" data-label="DECODED MESSAGE">
-    <input class="hack-input" id="input-3" type="text" placeholder="what does it say..." autocomplete="off" autocorrect="off" spellcheck="false">
-  </div>
-  <div class="error-line" id="error-3">» SEQUENCE MISMATCH — TRY AGAIN.</div>
-  <div class="hint-text" id="hint-3"></div>
-  <button class="hack-btn" onclick="checkStage3()">[ SUBMIT DECRYPTION ]</button>
-</div>
-```
-
-  </div>
-
-  <!-- ══════════════════════════════════
-       STAGE FINAL — ROMANTIC ENDING
-  ══════════════════════════════════ -->
+  <!-- FINAL -->
 
   <div class="stage" id="stage-final">
-    <div class="terminal-box" style="border-color:rgba(255,215,0,0.15);">
-      <div class="term-header">
-        <div class="term-dot r"></div>
-        <div class="term-dot y"></div>
-        <div class="term-dot g"></div>
-        <span class="term-title" style="color:rgba(255,215,0,0.4);">MESSAGE_UNLOCKED.txt</span>
+
+    <div class="terminal-box">
+
+      <div class="final-text">
+        You followed coordinates,<br>
+        decoded secrets,<br>
+        and solved every clue.<br><br>
+
+        But the truth is...<br><br>
+
+        I never created this game<br>
+        to test your intelligence.<br><br>
+
+        I created it because<br>
+        I wanted to give you<br>
+        a little adventure<br>
+        that ends with one thing:<br><br>
+
+        You.
       </div>
 
-```
-  <div class="final-text" id="final-text"></div>
-  <div class="signature" id="final-sig" style="display:none;"></div>
-</div>
-```
+      <div class="signature">
+        — mahdi ❤️
+      </div>
 
+    </div>
   </div>
 
-</div><!-- /#app -->
+</div>
 
 <script>
-/* ════════════════════════════════════════════
-   MATRIX RAIN
-════════════════════════════════════════════ */
-(function(){
-  const canvas = document.getElementById('matrix-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, cols, drops;
-  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ01アABCDEFGHIJK0110ロワヲン'.split('');
 
-  function resize(){
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    cols = Math.floor(W/16);
-    drops = Array(cols).fill(1);
-  }
+/* MATRIX */
 
-  function draw(){
-    ctx.fillStyle = 'rgba(0,0,0,0.05)';
-    ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#00ff41';
-    ctx.font = '14px Share Tech Mono';
-    drops.forEach((y,i)=>{
-      const ch = chars[Math.floor(Math.random()*chars.length)];
-      ctx.fillStyle = (Math.random()>0.97) ? '#ffffff' : '#00ff41';
-      ctx.globalAlpha = 0.7;
-      ctx.fillText(ch, i*16, y*16);
-      ctx.globalAlpha = 1;
-      if(y*16 > H && Math.random()>0.975) drops[i]=0;
-      drops[i]++;
-    });
-  }
-  window.addEventListener('resize', resize);
-  resize();
-  setInterval(draw, 50);
-})();
+const canvas = document.getElementById("matrix-canvas");
+const ctx = canvas.getContext("2d");
 
-/* ════════════════════════════════════════════
-   STARS CANVAS
-════════════════════════════════════════════ */
-const starsCanvas = document.getElementById('stars-canvas');
-const sCtx = starsCanvas.getContext('2d');
-let stars = [];
-function initStars(){
-  starsCanvas.width  = window.innerWidth;
-  starsCanvas.height = window.innerHeight;
-  stars = Array.from({length:120},()=>({
-    x: Math.random()*starsCanvas.width,
-    y: Math.random()*starsCanvas.height,
-    r: Math.random()*1.5+0.3,
-    speed: Math.random()*0.3+0.05,
-    alpha: Math.random(),
-    dalpha: (Math.random()-0.5)*0.01
-  }));
-}
-function animStars(){
-  sCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
-  stars.forEach(s=>{
-    s.alpha += s.dalpha;
-    if(s.alpha<0||s.alpha>1) s.dalpha*=-1;
-    s.y -= s.speed;
-    if(s.y<0) s.y=starsCanvas.height;
-    sCtx.beginPath();
-    sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    sCtx.fillStyle=`rgba(255,255,200,${s.alpha})`;
-    sCtx.fill();
-  });
-  requestAnimationFrame(animStars);
-}
-initStars(); animStars();
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-/* ════════════════════════════════════════════
-   AMBIENT MESSAGES
-════════════════════════════════════════════ */
-const ambientMsgs = [
-  '> searching database...',
-  '> authentication required...',
-  '> signal detected...',
-  '> decrypting packet 0x4F...',
-  '> routing through proxy...',
-  '> scanning network topology...',
-  '> firewall bypass: success',
-  '> memory dump in progress...',
-  '> compiling cipher key...',
-  '> tracking signal source...',
-  '> checksum: verified',
-  '> accessing secure node...',
-  '> identity unknown...',
-  '> connection encrypted.',
-  '> WARNING: unauthorized access',
-  '> location: classified',
-  '> status: ACTIVE',
-];
+const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const fontSize = 14;
+const columns = canvas.width / fontSize;
 
-function startAmbient(elId, interval=1800){
-  const el = document.getElementById(elId);
-  if(!el) return;
-  let msgs = [];
-  const add = ()=>{
-    const msg = ambientMsgs[Math.floor(Math.random()*ambientMsgs.length)];
-    msgs.push(msg);
-    if(msgs.length>4) msgs.shift();
-    el.innerHTML = msgs.map(m=>`<span style="color:rgba(0,255,65,${Math.random()*0.2+0.2})">${m}</span>`).join('<br>');
-  };
-  add();
-  return setInterval(add, interval);
+const drops = [];
+
+for(let x = 0; x < columns; x++){
+  drops[x] = 1;
 }
 
-/* ════════════════════════════════════════════
-   TYPEWRITER
-════════════════════════════════════════════ */
-function typeWrite(el, text, speed=38){
-  return new Promise(res=>{
-    let i=0;
-    el.textContent='';
-    const t = setInterval(()=>{
-      if(i<text.length){
-        el.textContent+=text[i++];
-      } else {
-        clearInterval(t);
-        res();
-      }
-    },speed);
-  });
-}
+function drawMatrix(){
 
-/* ════════════════════════════════════════════
-   STAGE 0 — BOOT SEQUENCE
-════════════════════════════════════════════ */
-async function bootSequence(){
-  const el = document.getElementById('intro-text');
-  const lines = [
-    'A hidden message has been locked somewhere in the world.',
-    '',
-    'Only one person can unlock it.',
-    '',
-    'Candidate detected...',
-    '',
-    'Initiating verification protocol...',
-  ];
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  await delay(1200);
+  ctx.fillStyle = "#00ff41";
+  ctx.font = fontSize + "px monospace";
 
-  for(let line of lines){
-    if(line===''){
-      el.innerHTML += '<br>';
-      await delay(300);
-    } else {
-      const span = document.createElement('div');
-      el.appendChild(span);
-      await typeWrite(span, '> '+line, 32);
-      await delay(500);
+  for(let i = 0; i < drops.length; i++){
+
+    const text = letters[Math.floor(Math.random()*letters.length)];
+
+    ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+
+    if(drops[i]*fontSize > canvas.height && Math.random() > 0.975){
+      drops[i] = 0;
     }
+
+    drops[i]++;
   }
-
-  await delay(600);
-  el.classList.remove('cursor-blink');
-
-  document.getElementById('btn-divider').style.display='block';
-  const btn = document.getElementById('start-btn');
-  btn.style.display='block';
-  btn.style.animation='stageIn 0.5s ease forwards';
-
-  startAmbient('ambient-0', 2200);
 }
 
-/* ════════════════════════════════════════════
-   STAGE NAVIGATION
-════════════════════════════════════════════ */
+setInterval(drawMatrix, 40);
+
+/* STAGES */
+
 function showStage(id){
-  document.querySelectorAll('.stage').forEach(s=>{
-    s.classList.remove('active');
-    s.style.display='none';
-  });
-  const el = document.getElementById(id);
-  el.style.display='flex';
-  el.classList.add('active');
-}
 
-function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  document.querySelectorAll(".stage").forEach(stage=>{
+    stage.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+}
 
 function gotoStage1(){
-  showTransition('ACCESS GRANTED','MISSION LOADING...','green', 2200, ()=>{
-    showStage('stage-1');
-    startAmbient('ambient-1', 2000);
-    typeWrite(document.createElement('div'),'',1); // warmup
-  });
+  showStage("stage-1");
 }
 
-/* ════════════════════════════════════════════
-   TRANSITION SCREEN
-════════════════════════════════════════════ */
-function showTransition(title, sub, color, duration, cb){
-  const ts = document.getElementById('transition-screen');
-  const st = document.getElementById('ts-status');
-  const sb = document.getElementById('ts-sub');
-  const bar= document.getElementById('ts-bar');
-
-  st.textContent = title;
-  st.className = 'big-status '+(color||'green');
-  sb.textContent = sub||'';
-  bar.style.width='0%';
-  bar.style.background = color==='red'?'var(--red)':'var(--green)';
-  bar.style.boxShadow = color==='red'?'0 0 10px var(--red)':'0 0 10px var(--green)';
-
-  ts.classList.add('active');
-
-  let progress=0;
-  const step = duration/80;
-  const interval = setInterval(()=>{
-    progress = Math.min(100, progress+100/80);
-    bar.style.width = progress+'%';
-  }, step);
-
-  setTimeout(()=>{
-    clearInterval(interval);
-    bar.style.width='100%';
-    setTimeout(()=>{
-      ts.classList.remove('active');
-      if(cb) cb();
-    }, 300);
-  }, duration);
-}
-
-/* ════════════════════════════════════════════
-   STAGE 1 — CHECK "Flore"
-════════════════════════════════════════════ */
-let hintTimer1=null;
 function checkStage1(){
-  const val = document.getElementById('input-1').value.trim().toLowerCase();
-  const err = document.getElementById('error-1');
-  const hint = document.getElementById('hint-1');
-  err.style.display='none';
 
-  if(val === 'flore'){
-    showTransition('IDENTITY CONFIRMED','Decrypting next layer...','green', 2400, ()=>{
-      showStage('stage-2');
-      startAmbient('ambient-2', 1900);
-      setTimeout(()=>{
-        typeWrite(document.getElementById('ascii-hint'), '> Each number = ASCII character code. A=65, B=66...', 28);
-      }, 600);
-    });
-  } else {
-    err.style.display='block';
-    shakeDenied();
-    clearTimeout(hintTimer1);
-    hintTimer1 = setTimeout(()=>{
-      hint.textContent='hint: it\'s the name of the place at those coordinates';
-    }, 8000);
+  const value = document.getElementById("input1").value.trim().toLowerCase();
+
+  if(value === "flore"){
+    showStage("stage-2");
+  }else{
+    document.getElementById("error1").style.display = "block";
   }
 }
 
-function shakeDenied(){
-  const box = document.querySelector('#stage-1 .terminal-box');
-  box.style.animation='none';
-  box.style.borderColor='var(--red)';
-  box.style.boxShadow='0 0 30px rgba(255,0,64,0.3)';
-  setTimeout(()=>{ box.style.borderColor=''; box.style.boxShadow=''; },1200);
-}
-
-/* ════════════════════════════════════════════
-   STAGE 2 — ASCII "FLORE"
-════════════════════════════════════════════ */
 function checkStage2(){
-  const val = document.getElementById('input-2').value.trim().toUpperCase();
-  const err = document.getElementById('error-2');
-  err.style.display='none';
 
-  if(val === 'FLORE'){
-    showTransition('DECRYPTING MEMORY...','Signal strengthening...','green', 2800, ()=>{
-      showStage('stage-3');
-      startAmbient('ambient-3', 1700);
-      setTimeout(()=>{
-        typeWrite(document.getElementById('binary-hint'), '> Convert binary to ASCII. Each 8-bit group = 1 character.', 28);
-      }, 600);
-    });
-  } else {
-    err.style.display='block';
-    const box = document.querySelector('#stage-2 .terminal-box');
-    box.style.borderColor='var(--red)';
-    setTimeout(()=>{ box.style.borderColor=''; }, 1000);
+  const value = document.getElementById("input2").value.trim().toUpperCase();
+
+  if(value === "FLORE"){
+    showStage("stage-3");
+  }else{
+    document.getElementById("error2").style.display = "block";
   }
 }
 
-/* ════════════════════════════════════════════
-   STAGE 3 — BINARY "I found you"
-════════════════════════════════════════════ */
-let hintTimer3=null;
 function checkStage3(){
-  const val = document.getElementById('input-3').value.trim().toLowerCase();
-  const err = document.getElementById('error-3');
-  const hint= document.getElementById('hint-3');
-  err.style.display='none';
 
-  if(val === 'i found you'){
-    triggerFinalSequence();
-  } else {
-    err.style.display='block';
-    const box = document.querySelector('#stage-3 .terminal-box');
-    box.style.borderColor='var(--red)';
-    setTimeout(()=>{ box.style.borderColor=''; }, 1000);
-    clearTimeout(hintTimer3);
-    hintTimer3 = setTimeout(()=>{
-      hint.textContent='hint: 3 words — "_ _____ ___"';
-    }, 10000);
+  const value = document.getElementById("input3").value.trim().toLowerCase();
+
+  if(value === "i found you"){
+    showStage("stage-final");
+  }else{
+    document.getElementById("error3").style.display = "block";
   }
 }
 
-/* ════════════════════════════════════════════
-   FINAL SEQUENCE
-════════════════════════════════════════════ */
-async function triggerFinalSequence(){
-  const ts = document.getElementById('transition-screen');
-  const st = document.getElementById('ts-status');
-  const sb = document.getElementById('ts-sub');
-  const bar= document.getElementById('ts-bar');
-
-  // Dramatic ACCESS GRANTED with green
-  st.textContent = 'ACCESS GRANTED';
-  st.className = 'big-status green';
-  sb.textContent = 'ALL LAYERS DECRYPTED';
-  bar.style.width='0%';
-  bar.style.background='var(--green)';
-  bar.style.boxShadow='0 0 10px var(--green)';
-  ts.classList.add('active');
-  bar.style.transition='width 1.5s ease';
-  await delay(100);
-  bar.style.width='100%';
-  await delay(600);
-
-  // Switch to stars
-  document.getElementById('matrix-canvas').style.opacity='0';
-  document.getElementById('matrix-canvas').style.transition='opacity 2s ease';
-  document.getElementById('stars-canvas').classList.add('active');
-  document.body.style.background='#000008';
-
-  await delay(1800);
-  ts.classList.remove('active');
-
-  await delay(500);
-  showStage('stage-final');
-
-  await delay(400);
-  spawnParticles();
-
-  const finalEl = document.getElementById('final-text');
-  const sigEl   = document.getElementById('final-sig');
-
-  const fullText = `You followed coordinates,
-decoded secrets,
-and solved every clue.
-
-But the truth is…
-
-I never created this game
-to test your intelligence.
-
-I created it
-because I wanted to give you
-a little adventure
-that ends with one thing:
-
-You.`;
-
-  finalEl.style.opacity='0';
-  finalEl.style.transition='opacity 1s ease';
-  await delay(200);
-  finalEl.style.opacity='1';
-
-  // Typewrite the final message
-  finalEl.innerHTML='';
-  const lines = fullText.split('\n');
-  for(let line of lines){
-    const div = document.createElement('div');
-    div.style.minHeight='26px';
-    finalEl.appendChild(div);
-    if(line.trim()){
-      await typeWrite(div, line, 42);
-    }
-    await delay(200);
-  }
-
-  // Signature
-  await delay(800);
-  sigEl.style.display='block';
-  sigEl.innerHTML = '—mahdi <span class="heart-pulse">❤️</span>';
-  sigEl.style.opacity='0';
-  sigEl.style.transition='opacity 1.5s ease';
-  await delay(100);
-  sigEl.style.opacity='1';
-
-  // Extra particles
-  setTimeout(spawnParticles, 1000);
-  setTimeout(spawnParticles, 2200);
-}
-
-/* ════════════════════════════════════════════
-   PARTICLES
-════════════════════════════════════════════ */
-function spawnParticles(){
-  const colors = ['#00ff41','#ffd700','#ff3d6b','#00ffff','#ffffff'];
-  for(let i=0;i<28;i++){
-    const p = document.createElement('div');
-    p.className='particle';
-    const size = Math.random()*4+1;
-    const color = colors[Math.floor(Math.random()*colors.length)];
-    const x = Math.random()*window.innerWidth;
-    const y = Math.random()*window.innerHeight;
-    const dx = (Math.random()-0.5)*300;
-    const dy = (Math.random()-0.5)*300;
-    const dur = (Math.random()*1.5+0.8).toFixed(2)+'s';
-    p.style.cssText = `
-      width:${size}px;height:${size}px;
-      background:${color};
-      box-shadow:0 0 ${size*2}px ${color};
-      left:${x}px;top:${y}px;
-      --dx:${dx}px;--dy:${dy}px;--dur:${dur};
-    `;
-    document.body.appendChild(p);
-    setTimeout(()=>p.remove(), 2500);
-  }
-}
-
-/* ════════════════════════════════════════════
-   ALLOW ENTER KEY ON INPUTS
-════════════════════════════════════════════ */
-document.getElementById('input-1').addEventListener('keydown',e=>{ if(e.key==='Enter') checkStage1(); });
-document.getElementById('input-2').addEventListener('keydown',e=>{ if(e.key==='Enter') checkStage2(); });
-document.getElementById('input-3').addEventListener('keydown',e=>{ if(e.key==='Enter') checkStage3(); });
-
-/* ════════════════════════════════════════════
-   BOOT
-════════════════════════════════════════════ */
-window.addEventListener('load', ()=>{
-  setTimeout(bootSequence, 800);
-});
 </script>
 
 </body>
