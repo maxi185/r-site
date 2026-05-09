@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-<title>CLASSIFIED // PRIVATE ACCESS</title>
+<title>ROMANTIC HACKER QUEST</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
@@ -13,10 +12,7 @@
 
 :root{
   --green:#00ff41;
-  --green-dim:#00cc33;
-  --green-glow:rgba(0,255,65,0.4);
   --red:#ff0040;
-  --bg:#000;
 }
 
 *{
@@ -25,44 +21,26 @@
   box-sizing:border-box;
 }
 
-html,body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#000;
+body{
+  background:black;
   color:var(--green);
   font-family:'Share Tech Mono', monospace;
+  overflow:hidden;
 }
 
-#matrix-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  opacity:0.18;
-  z-index:0;
-}
+/* MATRIX */
 
-.scanlines{
+canvas{
   position:fixed;
   inset:0;
-  pointer-events:none;
-  z-index:1;
-  background:repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 3px,
-    rgba(0,0,0,0.12) 3px,
-    rgba(0,0,0,0.12) 4px
-  );
+  z-index:0;
 }
 
 #app{
   position:relative;
   z-index:5;
   width:100%;
-  height:100%;
+  height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -84,50 +62,24 @@ html,body{
   border:1px solid rgba(0,255,65,0.2);
   padding:20px;
   border-radius:4px;
-  backdrop-filter:blur(6px);
+  backdrop-filter:blur(5px);
   box-shadow:0 0 30px rgba(0,255,65,0.08);
 }
 
-.term-header{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:16px;
-}
-
-.term-dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-}
-
-.term-dot.r{ background:#ff5f57; }
-.term-dot.y{ background:#febc2e; }
-.term-dot.g{ background:#28c840; }
-
-.term-title{
-  font-size:11px;
-  opacity:0.6;
-  letter-spacing:2px;
-}
-
-.warning-title{
+.title{
   font-family:'VT323', monospace;
-  font-size:28px;
-  color:var(--red);
+  font-size:30px;
   text-align:center;
   margin-bottom:20px;
-  text-shadow:0 0 20px rgba(255,0,64,0.5);
 }
 
-.typing-text{
-  font-size:13px;
+.typing{
   line-height:1.8;
-  color:var(--green-dim);
+  font-size:14px;
   margin-bottom:20px;
 }
 
-.hack-btn{
+.btn{
   width:100%;
   padding:14px;
   background:transparent;
@@ -135,73 +87,133 @@ html,body{
   color:var(--green);
   font-family:'VT323', monospace;
   font-size:22px;
-  letter-spacing:3px;
   cursor:pointer;
-  transition:0.3s;
+  margin-top:15px;
 }
 
-.hack-btn:hover{
-  background:rgba(0,255,65,0.1);
-  box-shadow:0 0 20px rgba(0,255,65,0.3);
-}
-
-.coords-box{
+.input{
   width:100%;
-  padding:16px;
-  text-align:center;
-  border:1px solid rgba(0,255,65,0.2);
-  margin:16px 0;
-  font-family:'VT323', monospace;
-  font-size:28px;
-}
-
-.map-hint{
-  font-size:12px;
-  line-height:1.7;
-  opacity:0.7;
-  margin-bottom:18px;
-}
-
-.hack-input{
-  width:100%;
+  padding:12px;
   background:transparent;
   border:none;
   border-bottom:1px solid var(--green);
   color:var(--green);
-  padding:12px 4px;
-  margin-bottom:14px;
+  margin-top:15px;
   outline:none;
-  font-family:'Share Tech Mono', monospace;
 }
 
-.error-line{
-  color:var(--red);
-  font-size:11px;
-  margin-bottom:12px;
-  display:none;
-}
-
-.code-display,
-.binary-display{
+.coords{
   text-align:center;
-  padding:16px;
+  padding:20px;
+  border:1px solid rgba(0,255,65,0.2);
+  margin:20px 0;
+  font-size:26px;
+  font-family:'VT323', monospace;
+}
+
+.code{
+  text-align:center;
+  padding:20px;
   border:1px solid rgba(0,255,65,0.15);
-  margin:16px 0;
+  margin:20px 0;
   line-height:2;
 }
 
-.final-text{
-  font-size:18px;
-  line-height:2;
+.folder{
+  padding:12px;
+  border:1px solid rgba(0,255,65,0.2);
+  margin-bottom:10px;
+  cursor:pointer;
+}
+
+.folder:hover{
+  background:rgba(0,255,65,0.08);
+}
+
+.corrupted-image{
+  width:100%;
+  height:240px;
+  background:url('https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=1200&auto=format&fit=crop') center/cover;
+  filter:blur(8px) contrast(1.4);
+  position:relative;
+  margin-top:20px;
+  transition:4s;
+}
+
+.restored{
+  filter:none;
+}
+
+.hidden-word{
+  position:absolute;
+  bottom:20px;
+  right:20px;
+  color:#00ff41;
+  opacity:0.2;
+  text-shadow:0 0 10px #00ff41;
+}
+
+#constellation{
+  width:100%;
+  max-width:320px;
+  margin:auto;
+  display:block;
+  margin-top:20px;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.heart{
+  width:90px;
+  height:90px;
+  background:#ff0040;
+  margin:40px auto;
+  position:relative;
+  transform:rotate(-45deg);
+  animation:pulse 1s infinite;
+}
+
+.heart::before,
+.heart::after{
+  content:'';
+  width:90px;
+  height:90px;
+  background:#ff0040;
+  border-radius:50%;
+  position:absolute;
+}
+
+.heart::before{
+  top:-45px;
+  left:0;
+}
+
+.heart::after{
+  left:45px;
+  top:0;
+}
+
+@keyframes pulse{
+  0%{transform:rotate(-45deg) scale(1);}
+  50%{transform:rotate(-45deg) scale(1.1);}
+  100%{transform:rotate(-45deg) scale(1);}
+}
+
+.final-scene{
+  position:fixed;
+  inset:0;
+  background:black;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:30px;
+}
+
+.final-message{
   text-align:center;
   color:white;
-}
-
-.signature{
-  text-align:center;
-  margin-top:20px;
-  font-size:22px;
-  color:#ffd700;
+  line-height:2;
+  font-size:24px;
+  max-width:700px;
 }
 
 </style>
@@ -209,168 +221,211 @@ html,body{
 
 <body>
 
-<canvas id="matrix-canvas"></canvas>
-
-<div class="scanlines"></div>
+<canvas id="matrix"></canvas>
 
 <div id="app">
 
-  <!-- STAGE 0 -->
+<!-- STAGE 1 -->
 
-  <div class="stage active" id="stage-0">
+<div class="stage active" id="stage1">
 
-    <div class="terminal-box">
+<div class="terminal-box">
 
-      <div class="term-header">
-        <div class="term-dot r"></div>
-        <div class="term-dot y"></div>
-        <div class="term-dot g"></div>
-        <span class="term-title">SYS::PRIVATE_CHANNEL</span>
-      </div>
+<div class="title">
+PRIVATE FILE DETECTED
+</div>
 
-      <div class="warning-title">
-        ⚠ PRIVATE FILE DETECTED ⚠
-      </div>
+<div class="typing">
+A hidden message has been locked somewhere in the world.
+</div>
 
-      <div class="typing-text" id="intro-text">
-        A hidden message has been locked somewhere in the world.<br><br>
-        Only one person can unlock it.
-      </div>
+<button class="btn" onclick="showStage('stage2')">
+INITIALIZE
+</button>
 
-      <button class="hack-btn" onclick="gotoStage1()">
-        [ INITIALIZE MISSION ]
-      </button>
+</div>
+</div>
 
-    </div>
-  </div>
+<!-- STAGE 2 -->
 
-  <!-- STAGE 1 -->
+<div class="stage" id="stage2">
 
-  <div class="stage" id="stage-1">
+<div class="terminal-box">
 
-    <div class="terminal-box">
+<div class="title">
+COORDINATES
+</div>
 
-      <div class="term-header">
-        <div class="term-dot r"></div>
-        <div class="term-dot y"></div>
-        <div class="term-dot g"></div>
-        <span class="term-title">MISSION_BRIEF.dat</span>
-      </div>
+<div class="coords">
+48.854179, 2.332503
+</div>
 
-      <div class="coords-box">
-        48.854179, 2.332503
-      </div>
+<input class="input" id="placeInput" placeholder="place name...">
 
-      <div class="map-hint">
-        Open Google Maps and find the hidden place.<br>
-        Its name is the key.
-      </div>
+<button class="btn" onclick="checkPlace()">
+SUBMIT
+</button>
 
-      <input class="hack-input" id="input1" placeholder="enter the place name...">
+</div>
+</div>
 
-      <div class="error-line" id="error1">
-        WRONG KEY
-      </div>
+<!-- STAGE 3 -->
 
-      <button class="hack-btn" onclick="checkStage1()">
-        [ SUBMIT ]
-      </button>
+<div class="stage" id="stage3">
 
-    </div>
-  </div>
+<div class="terminal-box">
 
-  <!-- STAGE 2 -->
+<div class="title">
+ASCII CIPHER
+</div>
 
-  <div class="stage" id="stage-2">
+<div class="code">
+70 76 79 82 69
+</div>
 
-    <div class="terminal-box">
+<input class="input" id="asciiInput" placeholder="decrypt...">
 
-      <div class="term-header">
-        <div class="term-dot r"></div>
-        <div class="term-dot y"></div>
-        <div class="term-dot g"></div>
-        <span class="term-title">ASCII_DECRYPTION</span>
-      </div>
+<button class="btn" onclick="checkAscii()">
+DECRYPT
+</button>
 
-      <div class="code-display">
-        70 76 79 82 69
-      </div>
+</div>
+</div>
 
-      <input class="hack-input" id="input2" placeholder="decrypt the code...">
+<!-- STAGE 4 -->
 
-      <div class="error-line" id="error2">
-        INVALID DECRYPTION
-      </div>
+<div class="stage" id="stage4">
 
-      <button class="hack-btn" onclick="checkStage2()">
-        [ DECRYPT ]
-      </button>
+<div class="terminal-box">
 
-    </div>
-  </div>
+<div class="title">
+BINARY CIPHER
+</div>
 
-  <!-- STAGE 3 -->
+<div class="code">
+01001001 00100000 01100110 01101111<br>
+01110101 01101110 01100100 00100000<br>
+01111001 01101111 01110101
+</div>
 
-  <div class="stage" id="stage-3">
+<input class="input" id="binaryInput" placeholder="decode...">
 
-    <div class="terminal-box">
+<button class="btn" onclick="checkBinary()">
+VERIFY
+</button>
 
-      <div class="term-header">
-        <div class="term-dot r"></div>
-        <div class="term-dot y"></div>
-        <div class="term-dot g"></div>
-        <span class="term-title">BINARY_DECRYPTION</span>
-      </div>
+</div>
+</div>
 
-      <div class="binary-display">
-        01001001 00100000 01100110 01101111<br>
-        01110101 01101110 01100100 00100000<br>
-        01111001 01101111 01110101
-      </div>
+<!-- STAGE 5 -->
 
-      <input class="hack-input" id="input3" placeholder="decode the message...">
+<div class="stage" id="stage5">
 
-      <div class="error-line" id="error3">
-        WRONG MESSAGE
-      </div>
+<div class="terminal-box">
 
-      <button class="hack-btn" onclick="checkStage3()">
-        [ SUBMIT ]
-      </button>
+<div class="title">
+RECOVERED FRAGMENTS
+</div>
 
-    </div>
-  </div>
+<div class="folder">/memories/</div>
+<div class="folder">/deleted/</div>
 
-  <!-- FINAL -->
+<div class="folder" onclick="openClassified()">
+/classified/
+</div>
 
-  <div class="stage" id="stage-final">
+<div class="folder">/do_not_open/</div>
 
-    <div class="terminal-box">
+<div id="classifiedContent" style="display:none;">
 
-      <div class="final-text">
-        You followed coordinates,<br>
-        decoded secrets,<br>
-        and solved every clue.<br><br>
+<div class="corrupted-image" id="corruptedImage">
 
-        But the truth is...<br><br>
+<div class="hidden-word">
+LUNA
+</div>
 
-        I never created this game<br>
-        to test your intelligence.<br><br>
+</div>
 
-        I created it because<br>
-        I wanted to give you<br>
-        a little adventure<br>
-        that ends with one thing:<br><br>
+<div class="typing" style="margin-top:20px;">
+Image integrity damaged.
+</div>
 
-        You.
-      </div>
+<button class="btn" onclick="restoreImage()">
+RESTORE IMAGE
+</button>
 
-      <div class="signature">
-        — mahdi ❤️
-      </div>
+<div id="restoreSection" style="display:none;">
 
-    </div>
-  </div>
+<input class="input" id="lunaInput" placeholder="hidden word...">
+
+<button class="btn" onclick="checkLuna()">
+VERIFY
+</button>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+<!-- STAGE 6 -->
+
+<div class="stage" id="stage6">
+
+<div class="terminal-box">
+
+<div class="title">
+CONSTELLATION
+</div>
+
+<div class="typing" style="text-align:center;">
+Some truths are hidden in the stars.
+</div>
+
+<canvas id="constellation" width="320" height="320"></canvas>
+
+<div class="typing" id="constellationText" style="text-align:center;">
+Connect the stars...
+</div>
+
+</div>
+</div>
+
+<!-- STAGE 7 -->
+
+<div class="stage" id="stage7">
+
+<div class="terminal-box">
+
+<div class="title">
+FINAL HEARTBEAT
+</div>
+
+<div class="typing" style="text-align:center;">
+One final verification remains.
+</div>
+
+<div class="heart" id="heart"></div>
+
+<div class="typing" style="text-align:center;">
+Hold for 3 seconds
+</div>
+
+</div>
+</div>
+
+<!-- FINAL -->
+
+<div class="stage" id="finalStage">
+
+<div class="final-scene">
+
+<div class="final-message" id="finalMessage"></div>
+
+</div>
+
+</div>
 
 </div>
 
@@ -378,45 +433,44 @@ html,body{
 
 /* MATRIX */
 
-const canvas = document.getElementById("matrix-canvas");
+const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const fontSize = 14;
-const columns = canvas.width / fontSize;
-
+const chars = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const size = 14;
+const cols = canvas.width / size;
 const drops = [];
 
-for(let x = 0; x < columns; x++){
-  drops[x] = 1;
+for(let i=0;i<cols;i++){
+  drops[i]=1;
 }
 
-function drawMatrix(){
+function draw(){
 
-  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.fillStyle="rgba(0,0,0,0.05)";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle = "#00ff41";
-  ctx.font = fontSize + "px monospace";
+  ctx.fillStyle="#00ff41";
+  ctx.font=size+"px monospace";
 
-  for(let i = 0; i < drops.length; i++){
+  for(let i=0;i<drops.length;i++){
 
-    const text = letters[Math.floor(Math.random()*letters.length)];
+    const text=chars[Math.floor(Math.random()*chars.length)];
 
-    ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+    ctx.fillText(text,i*size,drops[i]*size);
 
-    if(drops[i]*fontSize > canvas.height && Math.random() > 0.975){
-      drops[i] = 0;
+    if(drops[i]*size>canvas.height && Math.random()>0.975){
+      drops[i]=0;
     }
 
     drops[i]++;
   }
 }
 
-setInterval(drawMatrix, 40);
+setInterval(draw,40);
 
 /* STAGES */
 
@@ -429,41 +483,213 @@ function showStage(id){
   document.getElementById(id).classList.add("active");
 }
 
-function gotoStage1(){
-  showStage("stage-1");
-}
+function checkPlace(){
 
-function checkStage1(){
+  const value=document.getElementById("placeInput").value.trim().toLowerCase();
 
-  const value = document.getElementById("input1").value.trim().toLowerCase();
-
-  if(value === "flore"){
-    showStage("stage-2");
-  }else{
-    document.getElementById("error1").style.display = "block";
+  if(value==="flore"){
+    showStage("stage3");
   }
 }
 
-function checkStage2(){
+function checkAscii(){
 
-  const value = document.getElementById("input2").value.trim().toUpperCase();
+  const value=document.getElementById("asciiInput").value.trim().toUpperCase();
 
-  if(value === "FLORE"){
-    showStage("stage-3");
-  }else{
-    document.getElementById("error2").style.display = "block";
+  if(value==="FLORE"){
+    showStage("stage4");
   }
 }
 
-function checkStage3(){
+function checkBinary(){
 
-  const value = document.getElementById("input3").value.trim().toLowerCase();
+  const value=document.getElementById("binaryInput").value.trim().toLowerCase();
 
-  if(value === "i found you"){
-    showStage("stage-final");
-  }else{
-    document.getElementById("error3").style.display = "block";
+  if(value==="i found you"){
+    showStage("stage5");
   }
+}
+
+/* STAGE 5 */
+
+function openClassified(){
+
+  document.getElementById("classifiedContent").style.display="block";
+}
+
+function restoreImage(){
+
+  document.getElementById("corruptedImage")
+  .classList.add("restored");
+
+  document.getElementById("restoreSection")
+  .style.display="block";
+}
+
+function checkLuna(){
+
+  const value=document.getElementById("lunaInput")
+  .value
+  .trim()
+  .toUpperCase();
+
+  if(value==="LUNA"){
+
+    showStage("stage6");
+
+    initConstellation();
+  }
+}
+
+/* CONSTELLATION */
+
+const stars=[
+  {x:50,y:100},
+  {x:120,y:60},
+  {x:200,y:120},
+  {x:270,y:70}
+];
+
+let current=0;
+
+function initConstellation(){
+
+  const canvas=document.getElementById("constellation");
+  const ctx=canvas.getContext("2d");
+
+  draw();
+
+  canvas.onclick=function(e){
+
+    const rect=canvas.getBoundingClientRect();
+
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
+
+    const star=stars[current];
+
+    const dx=mx-star.x;
+    const dy=my-star.y;
+
+    if(Math.sqrt(dx*dx+dy*dy)<20){
+
+      current++;
+
+      draw();
+
+      if(current>=stars.length){
+
+        document.getElementById("constellationText")
+        .innerText="Constellation recognized.";
+
+        setTimeout(()=>{
+          showStage("stage7");
+        },2000);
+      }
+
+    }else{
+
+      current=0;
+
+      draw();
+
+      document.getElementById("constellationText")
+      .innerText="Wrong connection.";
+    }
+  };
+
+  function draw(){
+
+    ctx.clearRect(0,0,320,320);
+
+    for(let i=0;i<stars.length;i++){
+
+      const s=stars[i];
+
+      ctx.beginPath();
+
+      ctx.arc(s.x,s.y,8,0,Math.PI*2);
+
+      ctx.fillStyle=i<current?"#00ff41":"white";
+
+      ctx.fill();
+
+      if(i>0 && i<current){
+
+        ctx.beginPath();
+
+        ctx.moveTo(stars[i-1].x,stars[i-1].y);
+
+        ctx.lineTo(s.x,s.y);
+
+        ctx.strokeStyle="#00ff41";
+
+        ctx.lineWidth=2;
+
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+/* HEART */
+
+const heart=document.getElementById("heart");
+
+let holdTimer;
+
+heart.addEventListener("touchstart",()=>{
+
+  holdTimer=setTimeout(()=>{
+
+    startFinal();
+
+  },3000);
+});
+
+heart.addEventListener("touchend",()=>{
+
+  clearTimeout(holdTimer);
+});
+
+function startFinal(){
+
+  showStage("finalStage");
+
+  const text=`
+In every puzzle,
+every hidden clue,
+every encrypted message…
+
+there was only one destination.
+
+You.
+
+Thank you for playing ❤️
+`;
+
+  typeText(text);
+}
+
+function typeText(text){
+
+  const el=document.getElementById("finalMessage");
+
+  let i=0;
+
+  function type(){
+
+    if(i<text.length){
+
+      el.innerHTML+=text.charAt(i);
+
+      i++;
+
+      setTimeout(type,50);
+    }
+  }
+
+  type();
 }
 
 </script>
