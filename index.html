@@ -1,1 +1,922 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Matrice de Kaouther — Escape Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --nuit-1:#070a1a;
+  --nuit-2:#0d1230;
+  --violet-1:#7c3aed;
+  --violet-2:#a855f7;
+  --neon:#5eead4;
+  --neon-soft:#8be9d0;
+  --blanc:#f3f1ff;
+  --rose:#f0abfc;
+  --glass-bg:rgba(20,22,50,0.45);
+  --glass-border:rgba(255,255,255,0.12);
+  --danger:#fb7185;
+  --success:#5eead4;
+  --font-display:'Sora', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
 
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(124,58,237,0.25), transparent 55%),
+    radial-gradient(ellipse at 85% 20%, rgba(94,234,212,0.10), transparent 50%),
+    linear-gradient(180deg, var(--nuit-1), var(--nuit-2) 60%, #05060f 100%);
+  color:var(--blanc);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  position:relative;
+}
+
+::selection{background:var(--violet-2); color:#fff;}
+
+/* Focus visibility for accessibility */
+button:focus-visible, input:focus-visible{
+  outline:2px solid var(--neon);
+  outline-offset:3px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+}
+
+/* ============================================================
+   BACKGROUND CANVAS (constellation)
+   ============================================================ */
+#bg-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:0; pointer-events:none;
+}
+
+/* ============================================================
+   TOP BAR : progression + audio + reset
+   ============================================================ */
+#top-bar{
+  position:fixed; top:0; left:0; right:0; z-index:50;
+  display:flex; align-items:center; gap:16px;
+  padding:14px 20px;
+  background:linear-gradient(180deg, rgba(7,10,26,0.85), transparent);
+  backdrop-filter:blur(6px);
+}
+#progress-wrap{
+  flex:1;
+  height:8px;
+  border-radius:99px;
+  background:rgba(255,255,255,0.08);
+  overflow:hidden;
+  border:1px solid var(--glass-border);
+}
+#progress-fill{
+  height:100%; width:0%;
+  background:linear-gradient(90deg, var(--violet-1), var(--neon));
+  box-shadow:0 0 12px var(--violet-2);
+  transition:width 0.6s cubic-bezier(.4,0,.2,1);
+}
+.icon-btn{
+  width:38px; height:38px; border-radius:50%;
+  border:1px solid var(--glass-border);
+  background:var(--glass-bg);
+  color:var(--blanc);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:16px;
+  transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  flex-shrink:0;
+}
+.icon-btn:hover{ transform:translateY(-2px); border-color:var(--neon); box-shadow:0 0 14px rgba(94,234,212,0.35); }
+#level-label{
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:0.08em;
+  color:var(--neon-soft);
+  white-space:nowrap;
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+.screen{
+  display:none;
+  position:relative; z-index:1;
+  min-height:100vh;
+  align-items:center; justify-content:center;
+  padding:110px 20px 60px;
+}
+.screen.active{
+  display:flex;
+  animation:fadeSlideIn .7s cubic-bezier(.16,1,.3,1);
+}
+@keyframes fadeSlideIn{
+  from{opacity:0; transform:translateY(18px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.card{
+  width:100%; max-width:640px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:22px;
+  padding:44px 38px;
+  backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative;
+}
+.card::before{
+  content:"";
+  position:absolute; inset:-1px;
+  border-radius:22px;
+  padding:1px;
+  background:linear-gradient(135deg, rgba(124,58,237,0.6), rgba(94,234,212,0.25), transparent 60%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  pointer-events:none;
+}
+
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--violet-2);
+  margin:0 0 10px;
+}
+h1,h2{
+  font-family:var(--font-display);
+  font-weight:700;
+  margin:0 0 14px;
+  line-height:1.15;
+}
+h1{ font-size:clamp(28px, 5vw, 40px); }
+h2{ font-size:clamp(22px, 4vw, 28px); }
+p{ line-height:1.65; color:rgba(243,241,255,0.85); margin:0 0 16px; }
+.riddle-text{
+  font-size:17px;
+  color:var(--blanc);
+  background:rgba(255,255,255,0.04);
+  border-left:3px solid var(--violet-2);
+  padding:14px 18px;
+  border-radius:8px;
+  margin:18px 0;
+  white-space:pre-line;
+}
+
+.mono-block{
+  font-family:var(--font-mono);
+  font-size:15px;
+  letter-spacing:0.12em;
+  background:#03040c;
+  color:var(--neon);
+  border:1px solid rgba(94,234,212,0.25);
+  border-radius:10px;
+  padding:16px;
+  word-break:break-all;
+  margin:18px 0;
+  box-shadow:inset 0 0 24px rgba(94,234,212,0.08);
+}
+.mono-block .cursor{ animation:blink 1s step-end infinite; }
+@keyframes blink{ 50%{opacity:0;} }
+
+input[type="text"]{
+  width:100%;
+  padding:14px 16px;
+  border-radius:12px;
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.05);
+  color:var(--blanc);
+  font-family:var(--font-body);
+  font-size:16px;
+  margin-bottom:14px;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+input[type="text"]::placeholder{ color:rgba(243,241,255,0.35); }
+input[type="text"]:focus{
+  border-color:var(--violet-2);
+  box-shadow:0 0 0 3px rgba(124,58,237,0.25);
+  outline:none;
+}
+input.shake{ animation:shake .4s ease; border-color:var(--danger) !important; }
+@keyframes shake{
+  20%,60%{transform:translateX(-8px);}
+  40%,80%{transform:translateX(8px);}
+}
+
+.btn{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:15px;
+  padding:13px 28px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  background:linear-gradient(135deg, var(--violet-1), var(--violet-2));
+  color:#fff;
+  box-shadow:0 8px 24px rgba(124,58,237,0.35);
+  transition:transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn:hover{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.5); filter:brightness(1.08); }
+.btn:active{ transform:translateY(0); }
+.btn.ghost{
+  background:transparent;
+  border:1px solid var(--glass-border);
+  color:var(--blanc);
+  box-shadow:none;
+}
+.btn.ghost:hover{ border-color:var(--neon); box-shadow:0 0 16px rgba(94,234,212,0.2); }
+.btn-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:6px; }
+
+.feedback{
+  min-height:22px;
+  font-size:14px;
+  font-family:var(--font-mono);
+  margin-top:4px;
+}
+.feedback.err{ color:var(--danger); }
+.feedback.ok{ color:var(--success); }
+
+.hint-box{
+  margin-top:14px;
+  font-size:14px;
+  color:var(--neon-soft);
+  background:rgba(94,234,212,0.06);
+  border:1px dashed rgba(94,234,212,0.3);
+  border-radius:10px;
+  padding:12px 14px;
+  display:none;
+}
+.hint-box.visible{ display:block; animation:fadeSlideIn .4s ease; }
+
+/* ============================================================
+   NIVEAU 6 — SIMON
+   ============================================================ */
+#simon-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  max-width:280px;
+  margin:20px auto 10px;
+}
+.simon-btn{
+  aspect-ratio:1;
+  border-radius:16px;
+  border:none;
+  cursor:pointer;
+  opacity:0.55;
+  transition:opacity .15s ease, transform .1s ease;
+}
+.simon-btn.lit{ opacity:1; transform:scale(0.96); box-shadow:0 0 30px currentColor; }
+.simon-btn[data-c="0"]{ background:#fb7185; color:#fb7185; }
+.simon-btn[data-c="1"]{ background:#60a5fa; color:#60a5fa; }
+.simon-btn[data-c="2"]{ background:#5eead4; color:#5eead4; }
+.simon-btn[data-c="3"]{ background:#fbbf24; color:#fbbf24; }
+#simon-status{ text-align:center; font-family:var(--font-mono); font-size:13px; color:var(--neon-soft); margin-top:8px;}
+
+/* ============================================================
+   NIVEAU 9 — COFFRE FINAL
+   ============================================================ */
+#safe-wrap{ display:flex; flex-direction:column; align-items:center; }
+#safe{
+  width:180px; height:180px;
+  border-radius:20px;
+  background:linear-gradient(145deg, #1a1f45, #0a0c22);
+  border:3px solid var(--violet-2);
+  box-shadow:0 0 40px rgba(124,58,237,0.5), inset 0 0 30px rgba(0,0,0,0.6);
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+  transition:transform .8s cubic-bezier(.3,1.4,.5,1), box-shadow .8s ease;
+  margin:10px 0 20px;
+}
+#safe-dial{
+  width:90px; height:90px; border-radius:50%;
+  border:3px solid var(--neon);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:22px; color:var(--neon);
+  box-shadow:0 0 20px rgba(94,234,212,0.4);
+}
+#safe.opening{ transform:scale(1.08) rotate(-2deg); box-shadow:0 0 90px rgba(94,234,212,0.8); }
+#safe.opened{ transform:scale(0) rotate(25deg); opacity:0; }
+
+#final-text{ display:none; text-align:center; }
+#final-text.visible{ display:block; animation:fadeSlideIn 1s ease; }
+
+/* ============================================================
+   FX overlays : confettis / étoiles
+   ============================================================ */
+#fx-layer{
+  position:fixed; inset:0; pointer-events:none; z-index:100; overflow:hidden;
+}
+.confetti, .star-fx{
+  position:absolute; top:-20px; will-change:transform;
+}
+.confetti{ width:8px; height:14px; border-radius:2px; }
+.star-fx{ font-size:16px; color:var(--neon-soft); }
+@keyframes fall{
+  to{ transform:translateY(110vh) rotate(400deg); opacity:0.9; }
+}
+
+/* ============================================================
+   INTRO
+   ============================================================ */
+#screen-intro h1{
+  background:linear-gradient(90deg, var(--blanc), var(--neon-soft) 50%, var(--violet-2));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+footer.credit{
+  text-align:center; font-family:var(--font-mono); font-size:11px;
+  color:rgba(243,241,255,0.35); margin-top:22px; letter-spacing:0.05em;
+}
+
+@media (max-width:480px){
+  .card{ padding:30px 22px; border-radius:18px; }
+  #top-bar{ padding:12px 14px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="fx-layer"></div>
+
+<div id="top-bar">
+  <span id="level-label">NIVEAU 0 / 10</span>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+  <button class="icon-btn" id="audio-toggle" title="Activer / désactiver la musique">🔇</button>
+  <button class="icon-btn" id="reset-btn" title="Réinitialiser l'aventure">↺</button>
+</div>
+
+<!-- ===================== ÉCRAN D'ACCUEIL ===================== -->
+<section class="screen active" id="screen-intro">
+  <div class="card">
+    <p class="eyebrow">Simulation // Accès niveau 0</p>
+    <h1>Bienvenue dans la Matrice, Kaouther ! ✨</h1>
+    <p>Tu as 25 ans maintenant, les jeux d'enfants c'est terminé. Si tu es vraiment Kaouther, prouve-le en survivant à ce test de QI et de logique. Chaque étape te rapprochera du message final. Prépare un papier et un stylo, tu en auras besoin.</p>
+    <div class="btn-row">
+      <button class="btn" onclick="startGame()">Accepter le défi</button>
+    </div>
+    <footer class="credit">10 niveaux · cryptographie · logique · mémoire</footer>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 1 ===================== -->
+<section class="screen" id="screen-1">
+  <div class="card">
+    <p class="eyebrow">Niveau 1 // Pensée latérale</p>
+    <h2>L'énigme du miroir</h2>
+    <div class="riddle-text">Qu'est-ce qui t'appartient, mais que tes amis utilisent beaucoup plus souvent que toi ?</div>
+    <input type="text" id="input-1" placeholder="Ta réponse...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(1)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(1)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-1">Indice : ce n'est pas un objet, c'est ce que les autres prononcent à ta place.</div>
+    <div class="feedback" id="feedback-1"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 2 ===================== -->
+<section class="screen" id="screen-2">
+  <div class="card">
+    <p class="eyebrow">Niveau 2 // Déchiffrement binaire</p>
+    <h2>Terminal d'accès</h2>
+    <p>Déchiffre ce code binaire (ASCII) pour trouver le mot de passe :</p>
+    <div class="mono-block">01001100 01001111 01000111 01001001 01010001 01010101 01000101<span class="cursor">▌</span></div>
+    <input type="text" id="input-2" placeholder="Mot de passe décodé...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(2)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(2)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-2">Indice : chaque groupe de 8 chiffres (un octet) code une lettre en ASCII. 01000001 = A.</div>
+    <div class="feedback" id="feedback-2"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 3 ===================== -->
+<section class="screen" id="screen-3">
+  <div class="card">
+    <p class="eyebrow">Niveau 3 // Cryptographie ROT13</p>
+    <h2>Le message circulaire</h2>
+    <p>Le mot de passe est chiffré en ROT13 (décalage de 13 lettres) :</p>
+    <div class="mono-block">N Z V G V R</div>
+    <input type="text" id="input-3" placeholder="Mot déchiffré...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(3)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(3)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-3">L'alphabet est un cercle. Avance de 13 pas.</div>
+    <div class="feedback" id="feedback-3"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 4 ===================== -->
+<section class="screen" id="screen-4">
+  <div class="card">
+    <p class="eyebrow">Niveau 4 // Déduction mathématique</p>
+    <h2>Le code à 4 chiffres</h2>
+    <div class="riddle-text">Mon 1er est le seul nombre premier pair.
+Mon 2ème est la racine carrée de 81.
+Mon 3ème est le double de mon premier.
+Mon 4ème représente le néant.</div>
+    <p>Quel est le code PIN à 4 chiffres ?</p>
+    <input type="text" id="input-4" placeholder="Code à 4 chiffres...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(4)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(4)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-4">Indice : traite chaque phrase séparément, puis assemble les 4 chiffres dans l'ordre.</div>
+    <div class="feedback" id="feedback-4"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 5 ===================== -->
+<section class="screen" id="screen-5">
+  <div class="card">
+    <p class="eyebrow">Niveau 5 // Suite de Conway</p>
+    <h2>La suite qui se décrit elle-même</h2>
+    <div class="riddle-text">1
+11
+21
+1211
+111221
+?</div>
+    <input type="text" id="input-5" placeholder="Terme suivant...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(5)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(5)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-5">Lis à voix haute ce que tu vois sur la ligne précédente.</div>
+    <div class="feedback" id="feedback-5"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 6 — SIMON ===================== -->
+<section class="screen" id="screen-6">
+  <div class="card">
+    <p class="eyebrow">Niveau 6 // Mémoire séquentielle</p>
+    <h2>Simon dit...</h2>
+    <p>Observe la séquence, puis reproduis-la. Elle s'allonge à chaque round, jusqu'à 6 étapes.</p>
+    <div id="simon-grid">
+      <button class="simon-btn" data-c="0" onclick="simonPlayerInput(0)"></button>
+      <button class="simon-btn" data-c="1" onclick="simonPlayerInput(1)"></button>
+      <button class="simon-btn" data-c="2" onclick="simonPlayerInput(2)"></button>
+      <button class="simon-btn" data-c="3" onclick="simonPlayerInput(3)"></button>
+    </div>
+    <div id="simon-status">Appuie sur « Lancer » pour commencer.</div>
+    <div class="btn-row" style="justify-content:center; margin-top:14px;">
+      <button class="btn" id="simon-start-btn" onclick="simonStart()">Lancer la séquence</button>
+    </div>
+    <div class="feedback" id="feedback-6" style="text-align:center;"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 7 ===================== -->
+<section class="screen" id="screen-7">
+  <div class="card">
+    <p class="eyebrow">Niveau 7 // Équation logique</p>
+    <h2>Le marché mystère</h2>
+    <div class="riddle-text">🍎 + 🍎 + 🍎 = 30
+🍎 + 🍌 + 🍌 = 18
+🍌 − 🥥 = 2</div>
+    <p>🥥 + 🍎 + 🍌 = ?</p>
+    <input type="text" id="input-7" placeholder="Ta réponse...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(7)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(7)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-7">Indice : trouve 🍎 avec la 1ère ligne, puis 🍌 avec la 2ème, puis 🥥 avec la 3ème.</div>
+    <div class="feedback" id="feedback-7"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 8 ===================== -->
+<section class="screen" id="screen-8">
+  <div class="card">
+    <p class="eyebrow">Niveau 8 // L'ultime question</p>
+    <h2>Presque au bout</h2>
+    <div class="riddle-text">Combien de mois dans une année possèdent 28 jours ?</div>
+    <input type="text" id="input-8" placeholder="Ta réponse...">
+    <div class="btn-row">
+      <button class="btn" onclick="checkLevel(8)">Valider</button>
+      <button class="btn ghost" onclick="toggleHint(8)">Besoin d'aide ?</button>
+    </div>
+    <div class="hint-box" id="hint-8">Indice : relis bien la question, elle ne demande pas « exactement 28 jours ».</div>
+    <div class="feedback" id="feedback-8"></div>
+  </div>
+</section>
+
+<!-- ===================== NIVEAU 9 — COFFRE FINAL ===================== -->
+<section class="screen" id="screen-9">
+  <div class="card">
+    <p class="eyebrow">Niveau 9 // Coffre final</p>
+    <h2 id="safe-title">Le dernier verrou</h2>
+    <div id="safe-wrap">
+      <div id="safe"><div id="safe-dial">?</div></div>
+      <button class="btn" id="open-safe-btn" onclick="openSafe()">Ouvrir le coffre</button>
+    </div>
+    <div id="final-text">
+      <h1>Félicitations Kaouther ! ✨🧠</h1>
+      <p>Si tu es arrivée jusqu'ici, c'est que ton cerveau fonctionne à merveille (ou que tu as cherché sur Google, mais je te fais confiance !).</p>
+      <p>25 ans, c'est un bel âge. Tu es une amie brillante, exceptionnelle et d'une intelligence rare.</p>
+      <p>Ton énergie fait toute la différence au quotidien. Je voulais créer un vrai challenge pour te remercier d'être la super personne que tu es, et te prouver que tu es capable de tout résoudre.</p>
+      <p>Merci d'avoir fait chauffer tes neurones jusqu'au bout.</p>
+      <p>Prends soin de toi et reste toujours aussi géniale, intelligente et déterminée. ✨</p>
+      <p>Ça fait 5 ans que j'attends le bon moment pour te le dire : tu es quelqu'un de vraiment gentil.</p>
+      <footer class="credit" style="margin-top:26px; font-size:13px; letter-spacing:0.15em;">FIN DE LA SIMULATION</footer>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   ÉTAT GLOBAL & SAUVEGARDE
+   ============================================================ */
+const STORAGE_KEY = 'naila_escape_progress_v1';
+const TOTAL_LEVELS = 9;
+let state = { level: 0 }; // 0 = intro, 1..9 = niveau en cours, 10 = terminé
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = JSON.parse(raw); }
+  }catch(e){ state = { level: 0 }; }
+}
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function normalize(str){
+  return (str || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // retire les accents
+}
+
+/* ============================================================
+   NAVIGATION ENTRE ÉCRANS
+   ============================================================ */
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = n === 0 ? 'screen-intro' : (n <= TOTAL_LEVELS ? 'screen-' + n : 'screen-9');
+  document.getElementById(target).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  updateProgressUI(n);
+  if(n === 6) initSimon();
+}
+
+function updateProgressUI(n){
+  const displayLevel = Math.min(n, TOTAL_LEVELS);
+  document.getElementById('level-label').textContent =
+    n === 0 ? 'NIVEAU 0 / 10' : 'NIVEAU ' + displayLevel + ' / ' + TOTAL_LEVELS;
+  const pct = n === 0 ? 0 : Math.min((n - 1) / TOTAL_LEVELS * 100, 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function startGame(){
+  state.level = 1;
+  saveState();
+  showScreen(1);
+  playChime(true);
+}
+
+function goToLevel(n){
+  state.level = n;
+  saveState();
+  showScreen(n);
+}
+
+function toggleHint(n){
+  document.getElementById('hint-' + n).classList.toggle('visible');
+}
+
+/* ============================================================
+   VALIDATION DES NIVEAUX
+   ============================================================ */
+const validators = {
+  1: v => ['mon nom','nom','mon prenom','prenom'].includes(v),
+  2: v => v.replace(/\s/g,'') === 'logique',
+  3: v => ['amitie','amitié'.normalize('NFD').replace(/[\u0300-\u036f]/g,'')].includes(v),
+  4: v => v.replace(/[\s-]/g,'') === '2940',
+  5: v => v.replace(/\s/g,'') === '312211',
+  7: v => v.replace(/\s/g,'') === '16',
+  8: v => ['12','tous','les 12','toutes'].includes(v)
+};
+
+const errorMessages = [
+  "Trop facile de bloquer ici... Réfléchis bien !",
+  "Ce n'est pas ça. La Matrice ne se laisse pas berner.",
+  "Presque... mais pas tout à fait. Recommence.",
+  "Erreur. Relis l'énigme avec un œil neuf."
+];
+
+function checkLevel(n){
+  const input = document.getElementById('input-' + n);
+  const feedback = document.getElementById('feedback-' + n);
+  const value = normalize(input.value);
+  const ok = validators[n] && validators[n](value);
+
+  if(ok){
+    feedback.textContent = '✔ Correct. Accès autorisé.';
+    feedback.className = 'feedback ok';
+    playChime(true);
+    setTimeout(() => {
+      const next = n + 1;
+      goToLevel(next);
+    }, 700);
+  } else {
+    feedback.textContent = errorMessages[Math.floor(Math.random()*errorMessages.length)];
+    feedback.className = 'feedback err';
+    input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+    playChime(false);
+  }
+}
+
+/* ============================================================
+   RÉINITIALISATION
+   ============================================================ */
+function resetGame(){
+  if(!confirm("Réinitialiser toute l'aventure de Kaouther ?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = { level: 0 };
+  simonSequence = []; simonPlayerIndex = 0; simonRound = 0;
+  showScreen(0);
+}
+document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+/* ============================================================
+   NIVEAU 6 — SIMON
+   ============================================================ */
+const simonColors = ['#fb7185','#60a5fa','#5eead4','#fbbf24'];
+const simonFreqs  = [220, 277, 330, 415];
+let simonSequence = [];
+let simonPlayerIndex = 0;
+let simonRound = 0;
+let simonAcceptingInput = false;
+const SIMON_TARGET = 6;
+
+function initSimon(){
+  simonSequence = []; simonPlayerIndex = 0; simonRound = 0;
+  simonAcceptingInput = false;
+  document.getElementById('simon-status').textContent = "Appuie sur « Lancer » pour commencer.";
+  document.getElementById('simon-start-btn').disabled = false;
+  document.getElementById('feedback-6').textContent = '';
+}
+
+function simonStart(){
+  document.getElementById('simon-start-btn').disabled = true;
+  simonSequence = []; simonRound = 0;
+  simonNextRound();
+}
+
+function simonNextRound(){
+  simonRound++;
+  simonPlayerIndex = 0;
+  simonSequence.push(Math.floor(Math.random()*4));
+  document.getElementById('simon-status').textContent = 'Round ' + simonRound + ' / ' + SIMON_TARGET + ' — Observe...';
+  simonAcceptingInput = false;
+  playSequence(0);
+}
+
+function playSequence(i){
+  if(i >= simonSequence.length){
+    simonAcceptingInput = true;
+    document.getElementById('simon-status').textContent = 'À toi de jouer !';
+    return;
+  }
+  const c = simonSequence[i];
+  const btn = document.querySelector('.simon-btn[data-c="'+c+'"]');
+  btn.classList.add('lit');
+  playTone(simonFreqs[c], 0.28);
+  setTimeout(() => {
+    btn.classList.remove('lit');
+    setTimeout(() => playSequence(i+1), 200);
+  }, 420);
+}
+
+function simonPlayerInput(c){
+  if(!simonAcceptingInput) return;
+  const btn = document.querySelector('.simon-btn[data-c="'+c+'"]');
+  btn.classList.add('lit');
+  playTone(simonFreqs[c], 0.18);
+  setTimeout(() => btn.classList.remove('lit'), 200);
+
+  if(c === simonSequence[simonPlayerIndex]){
+    simonPlayerIndex++;
+    if(simonPlayerIndex === simonSequence.length){
+      simonAcceptingInput = false;
+      if(simonRound >= SIMON_TARGET){
+        document.getElementById('feedback-6').textContent = 'Impressionnant, ta mémoire est intacte pour ton âge !';
+        document.getElementById('feedback-6').className = 'feedback ok';
+        playChime(true);
+        setTimeout(() => goToLevel(7), 1100);
+      } else {
+        document.getElementById('simon-status').textContent = 'Bien joué ! Round suivant...';
+        setTimeout(simonNextRound, 900);
+      }
+    }
+  } else {
+    document.getElementById('feedback-6').textContent = 'Séquence brisée. On reprend depuis le début.';
+    document.getElementById('feedback-6').className = 'feedback err';
+    playChime(false);
+    simonAcceptingInput = false;
+    setTimeout(() => { simonSequence = []; simonRound = 0; simonStart(); }, 1200);
+  }
+}
+
+/* ============================================================
+   NIVEAU 9 — COFFRE FINAL
+   ============================================================ */
+function openSafe(){
+  const safe = document.getElementById('safe');
+  const btn = document.getElementById('open-safe-btn');
+  btn.disabled = true;
+  safe.classList.add('opening');
+  playCelebration();
+  setTimeout(() => {
+    safe.classList.add('opened');
+    document.getElementById('final-text').classList.add('visible');
+    launchConfetti();
+    launchStarRain();
+    state.level = 10;
+    saveState();
+  }, 750);
+}
+
+/* ============================================================
+   FX : confettis & pluie d'étoiles
+   ============================================================ */
+function launchConfetti(){
+  const colors = ['#a855f7','#5eead4','#f0abfc','#fbbf24','#60a5fa'];
+  const layer = document.getElementById('fx-layer');
+  for(let i=0;i<90;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    const duration = 2.6 + Math.random()*2.2;
+    const delay = Math.random()*1.4;
+    el.style.animation = `fall ${duration}s ${delay}s ease-in forwards`;
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), (duration+delay)*1000 + 200);
+  }
+}
+function launchStarRain(){
+  const layer = document.getElementById('fx-layer');
+  for(let i=0;i<40;i++){
+    const el = document.createElement('div');
+    el.className = 'star-fx';
+    el.textContent = '✨';
+    el.style.left = Math.random()*100 + 'vw';
+    const duration = 3 + Math.random()*2.5;
+    const delay = Math.random()*2;
+    el.style.animation = `fall ${duration}s ${delay}s ease-in forwards`;
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), (duration+delay)*1000 + 200);
+  }
+}
+
+/* ============================================================
+   ARRIÈRE-PLAN — CONSTELLATION CANVAS
+   ============================================================ */
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+let W, H, points = [];
+const POINT_COUNT = 90;
+
+function resizeCanvas(){
+  W = bgCanvas.width = window.innerWidth;
+  H = bgCanvas.height = window.innerHeight;
+}
+function initPoints(){
+  points = Array.from({length: POINT_COUNT}, () => ({
+    x: Math.random()*W, y: Math.random()*H,
+    vx: (Math.random()-0.5)*0.25, vy: (Math.random()-0.5)*0.25,
+    r: Math.random()*1.4 + 0.5
+  }));
+}
+function animateBg(){
+  bgCtx.clearRect(0,0,W,H);
+  points.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if(p.x < 0 || p.x > W) p.vx *= -1;
+    if(p.y < 0 || p.y > H) p.vy *= -1;
+    bgCtx.beginPath();
+    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    bgCtx.fillStyle = 'rgba(197,178,255,0.55)';
+    bgCtx.fill();
+  });
+  for(let i=0;i<points.length;i++){
+    for(let j=i+1;j<points.length;j++){
+      const dx = points[i].x - points[j].x, dy = points[i].y - points[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < 130){
+        bgCtx.beginPath();
+        bgCtx.moveTo(points[i].x, points[i].y);
+        bgCtx.lineTo(points[j].x, points[j].y);
+        bgCtx.strokeStyle = 'rgba(94,234,212,' + (0.14 * (1 - dist/130)) + ')';
+        bgCtx.lineWidth = 1;
+        bgCtx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animateBg);
+}
+window.addEventListener('resize', () => { resizeCanvas(); initPoints(); });
+resizeCanvas(); initPoints(); animateBg();
+
+/* ============================================================
+   AUDIO — ambiance procédurale (Web Audio API, sans fichier externe)
+   ============================================================ */
+let audioCtx = null;
+let ambientOn = false;
+let ambientNodes = [];
+
+function ensureAudioCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function toggleAmbient(){
+  ensureAudioCtx();
+  ambientOn = !ambientOn;
+  document.getElementById('audio-toggle').textContent = ambientOn ? '🔊' : '🔇';
+  if(ambientOn){ startAmbient(); } else { stopAmbient(); }
+}
+document.getElementById('audio-toggle').addEventListener('click', toggleAmbient);
+
+function startAmbient(){
+  stopAmbient();
+  const notes = [110, 130.8, 146.8, 164.8]; // pad mystérieux et doux
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = 0;
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    gain.gain.linearRampToValueAtTime(0.02 + i*0.004, audioCtx.currentTime + 2);
+    // LFO doux sur le volume pour un effet "respiration"
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    lfo.frequency.value = 0.05 + i*0.02;
+    lfoGain.gain.value = 0.012;
+    lfo.connect(lfoGain).connect(gain.gain);
+    lfo.start();
+    ambientNodes.push(osc, lfo, gain);
+  });
+}
+function stopAmbient(){
+  ambientNodes.forEach(n => { try{ n.stop && n.stop(); n.disconnect && n.disconnect(); }catch(e){} });
+  ambientNodes = [];
+}
+
+function playTone(freq, duration){
+  if(!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.value = 0.12;
+  osc.connect(gain).connect(audioCtx.destination);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playChime(success){
+  if(!audioCtx) return;
+  if(success){ playTone(660, 0.15); setTimeout(()=>playTone(880,0.2),120); }
+  else { playTone(160, 0.25); }
+}
+
+function playCelebration(){
+  if(!audioCtx) return;
+  const seq = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+  seq.forEach((f,i) => setTimeout(() => playTone(f, 0.35), i*160));
+}
+
+/* ============================================================
+   INITIALISATION
+   ============================================================ */
+loadState();
+if(state.level >= 10){ showScreen(9); document.getElementById('safe').classList.add('opened'); document.getElementById('final-text').classList.add('visible'); }
+else if(state.level >= 1){ showScreen(state.level); }
+else { showScreen(0); }
+</script>
+</body>
+</html>
